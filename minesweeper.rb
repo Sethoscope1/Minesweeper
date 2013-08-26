@@ -1,4 +1,60 @@
 class Minesweeper
+
+  def initialize(dimensions, mine_count)
+    @dimensions = dimensions
+    @board = Board.new(dimensions, mine_count)
+  end
+
+  def play
+
+    until won?
+      @board.print_board
+      move = get_move
+      target_x, target_y = move[:coords]
+      target_space = @board.board[target_x][target_y]
+      reveal_space(target_space)
+
+      reveal_neighbors(target_space) if target_space.mine_neighbors == 0
+
+    end
+
+  end
+
+  def reveal_neighbors(space)
+    neighbors = space.get_neighbors(@board.board, @dimensions)
+    neighbors.select! { |n| !n.discovered }
+    neighbors.each do |neighbor|
+      reveal_space(neighbor) unless neighbor.mine
+      reveal_neighbors(neighbor) if neighbor.mine_neighbors == 0
+    end
+  end
+
+  def reveal_space(space)
+    space.discovered = true
+  end
+
+  def mine?(space)
+    space.mine
+  end
+
+  def won?
+
+  end
+
+  def get_move
+    move = {}
+    puts "Where would you like to move, boss"
+    move_input = gets.chomp.downcase.split("")
+    p move_input
+    move[:flag] = move_input[0] == "f" ? true : false
+    move[:coords] = [(move_input[-1].to_i) -1 , (move_input[-2].to_i) -1]
+    #validate
+    move
+  end
+  # 1, 1
+end
+
+class Board
   attr_accessor :board
   attr_reader :dimensions
 
@@ -45,7 +101,7 @@ class Minesweeper
         end
         puts neighbors.length
         board[row][space].mine_neighbors = mine_count
-        board[row][space].print = mine_count.to_s unless mine_count == 0
+        board[row][space].mark = mine_count.to_s unless mine_count == 0
       end
     end
 
@@ -59,7 +115,8 @@ class Minesweeper
   def print_board
     @board.each do |row|
       row.each do |space|
-        print space.print + " "
+        symbol = space.discovered ? space.mark : "*"
+        print "#{symbol} "
       end
       puts ""
     end
@@ -69,18 +126,15 @@ class Minesweeper
 
 end
 
-class Board
-end
-
 class Space
-  attr_accessor :mine, :mine_neighbors, :print, :discovered, :coords
+  attr_accessor :mine, :mine_neighbors, :mark, :discovered, :coords
 
-  def initialize(coords, mine, print)
-    @discovered = true
+  def initialize(coords, mine, mark)
+    @discovered = false
     @mine = mine
     @mine_neighbors = 0
     @coords = coords
-    @print = print #get_symbol
+    @mark = mark #get_symbol
   end
 
   def get_neighbors(board, dimensions)
@@ -91,8 +145,6 @@ class Space
       [-1,0], [1,0],
       [-1, 1], [0, 1], [1, 1]
     ]
-
-    puts "dimensions: #{dimensions}"
 
     neighbors_offset.each do |x,y|
       x_coord, y_coord = (@coords[0] + x), (@coords[1] + y)
@@ -120,4 +172,3 @@ class Space
 #   end
 
 end
-
