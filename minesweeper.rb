@@ -7,17 +7,24 @@ class Minesweeper
 
   def play
 
-    until won?
+    until win?
       @board.print_board
       move = get_move
       target_x, target_y = move[:coords]
       target_space = @board.board[target_x][target_y]
-      reveal_space(target_space)
 
-      reveal_neighbors(target_space) if target_space.mine_neighbors == 0
+      move[:flag] ? flag_space(target_space) : reveal_space(target_space)
 
+      break if target_space.mine && target_space.discovered # we lose
+
+      unless move[:flag]
+        reveal_neighbors(target_space) if target_space.mine_neighbors == 0
+      end
     end
 
+    @board.print_board
+
+    puts win? ? "You won, boss!" : "You lose, you are no longer the boss."
   end
 
   def reveal_neighbors(space)
@@ -33,25 +40,33 @@ class Minesweeper
     space.discovered = true
   end
 
+  def flag_space(space)
+    return if space.discovered
+    space.flagged = space.flagged ? false : true
+  end
+
   def mine?(space)
     space.mine
   end
 
-  def won?
-
+  def win?
+    @board.board.all? do |row|
+      row.all? do |space|
+        (!space.mine && space.discovered) || space.mine
+      end
+    end
   end
+
 
   def get_move
     move = {}
     puts "Where would you like to move, boss"
-    move_input = gets.chomp.downcase.split("")
-    p move_input
+    move_input = gets.chomp.downcase.split(" ")
     move[:flag] = move_input[0] == "f" ? true : false
     move[:coords] = [(move_input[-1].to_i) -1 , (move_input[-2].to_i) -1]
     #validate
     move
   end
-  # 1, 1
 end
 
 class Board
@@ -99,7 +114,6 @@ class Board
         neighbors.each do |neighbor|
           mine_count += 1 if neighbor.mine
         end
-        puts neighbors.length
         board[row][space].mine_neighbors = mine_count
         board[row][space].mark = mine_count.to_s unless mine_count == 0
       end
@@ -116,6 +130,7 @@ class Board
     @board.each do |row|
       row.each do |space|
         symbol = space.discovered ? space.mark : "*"
+        symbol = space.flagged ? "F" : symbol
         print "#{symbol} "
       end
       puts ""
@@ -127,7 +142,7 @@ class Board
 end
 
 class Space
-  attr_accessor :mine, :mine_neighbors, :mark, :discovered, :coords
+  attr_accessor :mine, :mine_neighbors, :mark, :discovered, :coords, :flagged
 
   def initialize(coords, mine, mark)
     @discovered = false
@@ -135,6 +150,7 @@ class Space
     @mine_neighbors = 0
     @coords = coords
     @mark = mark #get_symbol
+    @flagged = false
   end
 
   def get_neighbors(board, dimensions)
