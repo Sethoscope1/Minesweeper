@@ -7,15 +7,14 @@ class Minesweeper
 
   def play
 
-    until win?
+    until win? || lose?
+      print "lose" if lose?
       @board.print_board
       move = get_move
       target_x, target_y = move[:coords]
       target_space = @board.board[target_x][target_y]
 
       move[:flag] ? flag_space(target_space) : reveal_space(target_space)
-
-      break if target_space.mine && target_space.discovered # we lose
 
       unless move[:flag]
         reveal_neighbors(target_space) if target_space.mine_neighbors == 0
@@ -47,6 +46,14 @@ class Minesweeper
 
   def mine?(space)
     space.mine
+  end
+
+  def lose?
+    @board.board.any? do |row|
+      row.any? do |space|
+        space.mine && space.discovered
+      end
+    end
   end
 
   def win?
@@ -174,17 +181,5 @@ class Space
     coords.all? { |num| num.between?(0, dimensions - 1) }
   end
 
-  # def get_symbol
-#     if discovered
-#       if mine
-#         "o"
-#       else
-#         "_"
-#       end
-#     else
-#       "*"
-#     end
-#
-#   end
 
 end
