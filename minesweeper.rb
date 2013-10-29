@@ -183,3 +183,6 @@ class Space
 
 
 end
+
+game = Minesweeper.new(10, 20)
+game.play
