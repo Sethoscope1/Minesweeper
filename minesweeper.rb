@@ -67,7 +67,7 @@ class Minesweeper
 
   def get_move
     move = {}
-    puts "Where would you like to move, boss"
+    puts "Where would you like to move, boss?"
     move_input = gets.chomp.downcase.split(" ")
     move[:flag] = move_input[0] == "f" ? true : false
     move[:coords] = [(move_input[-1].to_i) -1 , (move_input[-2].to_i) -1]
